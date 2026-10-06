@@ -13,7 +13,7 @@ dev_dependencies:
   change_app_package_name:
     git:
       url: https://github.com/Bhavik-Wrteam-hub/change_app_package_name.git
-      ref: v1.6.0
+      ref: v1.6.1
 ```
 
 Update dependencies:
@@ -47,6 +47,31 @@ dart run change_app_package_name:main com.new.package.name --dry-run
 ```
 
 Where `com.new.package.name` is the new package name that you want for your app.
+
+The command shows what it changed and what to do next:
+
+```
+📦 Changing package name to com.new.package.name
+   Android + iOS
+
+🤖 Android · School Builder layout
+   📝 android/app/build.gradle
+      applicationId: com.wrteam.saas.school → com.new.package.name
+
+🍎 iOS · School Builder layout
+   📝 ios/Flutter/Debug.xcconfig
+      SCHOOL_BUNDLE_ID: com.wrteam.eschool.saas → com.new.package.name
+   📝 ios/Flutter/Release.xcconfig
+      SCHOOL_BUNDLE_ID: com.wrteam.eschool.saas → com.new.package.name
+
+✅ Package name updated.
+```
+
+Emoji and colour are used where the terminal shows them. For plain text, in a script or a log, add `--plain`:
+
+```
+dart run change_app_package_name:main com.new.package.name --plain
+```
 
 ## What It Changes
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:change_app_package_name/android_rename_steps.dart';
 import 'package:change_app_package_name/change_app_package_name.dart';
 import 'package:change_app_package_name/ios_rename_steps.dart';
+import 'package:change_app_package_name/output_style.dart';
 import 'package:test/test.dart';
 
 import 'fixtures.dart';
@@ -25,10 +26,16 @@ class Run {
   String get output => lines.join('\n');
 }
 
-Future<Run> run(Project project, List<String> arguments) async {
+/// Runs the command as a script or a plain terminal sees it, unless a [style]
+/// is given.
+Future<Run> run(
+  Project project,
+  List<String> arguments, {
+  OutputStyle style = OutputStyle.plain,
+}) async {
   final lines = <String>[];
   final code = await ChangeAppPackageName.run(arguments,
-      root: project.root, log: lines.add);
+      root: project.root, log: lines.add, style: style);
   return Run(code, lines);
 }
 

@@ -1,3 +1,9 @@
+## [1.6.1] - (October 06, 2026)
+
+* Clearer output: a title, one block per platform with the files it changes, a marked result, and the Firebase step with its command on a line of its own.
+* Emoji and colour where the terminal shows them. The old Windows console, `TERM=dumb`, `NO_COLOR` and redirected output get plain text.
+* Add `--plain` to turn emoji and colour off.
+
 ## [1.6.0] - (October 06, 2026)
 
 Fork for the eSchool SaaS apps.
