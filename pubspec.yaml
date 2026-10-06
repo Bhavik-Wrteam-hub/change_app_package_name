@@ -1,8 +1,15 @@
 name: change_app_package_name
-description: Change App Package Name with single command. Update AndroidManifest, build.gradle, MainActivity files & move MainActivity file to new directory structure automatically.
-version: 1.5.0
+description: Change App Package Name with single command. Supports the standard Flutter layout and the eSchool SaaS School Builder layout, where the Android application id and the iOS bundle id are build settings a school build overrides.
+version: 1.6.0
 maintainer: Atiq Samtia (@AtiqSamtia)
-homepage: https://github.com/atiqsamtia/change_app_package_name
+homepage: https://github.com/Bhavik-Wrteam-hub/change_app_package_name
+repository: https://github.com/Bhavik-Wrteam-hub/change_app_package_name
+# A fork of https://github.com/atiqsamtia/change_app_package_name, used as a
+# git dependency. It must not be published over the original on pub.dev.
+publish_to: none
 
 environment:
   sdk: '>=2.12.0 <4.0.0'
+
+dev_dependencies:
+  test: ^1.24.0

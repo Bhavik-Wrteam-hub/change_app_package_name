@@ -1,3 +1,16 @@
+## [1.6.0] - (October 06, 2026)
+
+Fork for the eSchool SaaS apps.
+
+* Support the School Builder layout (eSchool SaaS v1.12.0 and later): the Android application id is the fallback of `getProperty('applicationId', '...')` in `build.gradle`, and the iOS bundle id is `SCHOOL_BUNDLE_ID` in `Debug.xcconfig` and `Release.xcconfig`. Version 1.5.0 stopped with `applicationId not found` on Android and overwrote the link in `project.pbxproj` on iOS.
+* Put the `$(SCHOOL_BUNDLE_ID)` link back in a `project.pbxproj` that version 1.5.0 overwrote.
+* Check both platforms before writing either, so a project is never left half-renamed.
+* Validate the package name for the platforms being renamed.
+* Report Firebase files that are still for the old ids, with the `flutterfire configure` command to regenerate them.
+* Add `--dry-run` and `--help`, and return a non-zero exit code on failure.
+* Standard layout: only replace the `package="..."` attribute of a manifest, not the rest of the line.
+* Add a test suite.
+
 ## [1.5.0] - (February 23, 2025)
 
 * Add support for Flutter 3.29.0 for Android build.gradle.kts file structure.
