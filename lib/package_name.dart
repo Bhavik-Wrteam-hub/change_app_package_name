@@ -43,4 +43,36 @@ class PackageName {
   /// True when [name] has capital letters. The stores accept them, but treat
   /// `com.App` and `com.app` as two different apps.
   static bool hasUppercase(String name) => name != name.toLowerCase();
+
+  /// Words Java reserves. An application id may contain them, but the Android
+  /// build refuses a `namespace` that does, so such a name can't name the code.
+  static const Set<String> javaKeywords = {
+    'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char',
+    'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum',
+    'extends', 'false', 'final', 'finally', 'float', 'for', 'goto', 'if',
+    'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'native',
+    'new', 'null', 'package', 'private', 'protected', 'public', 'return',
+    'short', 'static', 'strictfp', 'super', 'switch', 'synchronized', 'this',
+    'throw', 'throws', 'transient', 'true', 'try', 'void', 'volatile', 'while',
+    '_', //
+  };
+
+  /// Words Kotlin reserves everywhere. A package may contain them, written in
+  /// backticks: `` package `in`.co.school ``.
+  static const Set<String> kotlinHardKeywords = {
+    'as', 'break', 'class', 'continue', 'do', 'else', 'false', 'for', 'fun',
+    'if', 'in', 'interface', 'is', 'null', 'object', 'package', 'return',
+    'super', 'this', 'throw', 'true', 'try', 'typealias', 'typeof', 'val',
+    'var', 'when', 'while', //
+  };
+
+  /// The parts of [name] that Java reserves, in order and without repeats.
+  static List<String> javaKeywordsIn(String name) =>
+      name.split('.').where(javaKeywords.contains).toSet().toList();
+
+  /// [name] as Kotlin source writes it.
+  static String inKotlin(String name) => name
+      .split('.')
+      .map((part) => kotlinHardKeywords.contains(part) ? '`$part`' : part)
+      .join('.');
 }

@@ -1,6 +1,6 @@
 name: change_app_package_name
 description: Change App Package Name with single command. Supports the standard Flutter layout and the eSchool SaaS School Builder layout, where the Android application id and the iOS bundle id are build settings a school build overrides.
-version: 1.6.1
+version: 1.7.0
 maintainer: Atiq Samtia (@AtiqSamtia)
 homepage: https://github.com/Bhavik-Wrteam-hub/change_app_package_name
 repository: https://github.com/Bhavik-Wrteam-hub/change_app_package_name

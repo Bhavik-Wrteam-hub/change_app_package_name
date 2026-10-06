@@ -5,6 +5,7 @@ import 'package:test/test.dart';
 import 'fixtures.dart';
 
 const String newId = 'com.yourcompany.eschool';
+const String kotlin = 'android/app/src/main/kotlin';
 const OutputStyle emoji = OutputStyle(emoji: true, color: false);
 const OutputStyle colour = OutputStyle(emoji: true, color: true);
 
@@ -34,6 +35,14 @@ void main() {
         '🤖 Android · School Builder layout',
         '   📝 android/app/build.gradle',
         '      applicationId: $studentAndroidId → $newId',
+        '      namespace: $studentAndroidId → $newId',
+        '   📝 android/app/src/main/AndroidManifest.xml',
+        '      package: $studentAndroidId → $newId',
+        '   📝 android/app/src/debug/AndroidManifest.xml',
+        '      package: $studentAndroidId → $newId',
+        '   📝 $kotlin/com/wrteam/saas/school/MainActivity.kt',
+        '      package: $studentAndroidId → $newId',
+        '      moved to: $kotlin/com/wrteam/saas/school → $kotlin/com/yourcompany/eschool',
         '',
         '🍎 iOS · School Builder layout',
         '   📝 ios/Flutter/Debug.xcconfig',
@@ -115,6 +124,14 @@ void main() {
         'Android - School Builder layout',
         '  android/app/build.gradle',
         '    applicationId: $studentAndroidId -> $newId',
+        '    namespace: $studentAndroidId -> $newId',
+        '  android/app/src/main/AndroidManifest.xml',
+        '    package: $studentAndroidId -> $newId',
+        '  android/app/src/debug/AndroidManifest.xml',
+        '    package: $studentAndroidId -> $newId',
+        '  $kotlin/com/wrteam/saas/school/MainActivity.kt',
+        '    package: $studentAndroidId -> $newId',
+        '    moved to: $kotlin/com/wrteam/saas/school -> $kotlin/com/yourcompany/eschool',
         '',
         'Package name updated.',
         '',

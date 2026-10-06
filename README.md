@@ -13,7 +13,7 @@ dev_dependencies:
   change_app_package_name:
     git:
       url: https://github.com/Bhavik-Wrteam-hub/change_app_package_name.git
-      ref: v1.6.1
+      ref: v1.7.0
 ```
 
 Update dependencies:
@@ -51,18 +51,24 @@ Where `com.new.package.name` is the new package name that you want for your app.
 The command shows what it changed and what to do next:
 
 ```
-📦 Changing package name to com.new.package.name
+📦 Changing package name to com.yourcompany.eschool
    Android + iOS
 
 🤖 Android · School Builder layout
    📝 android/app/build.gradle
-      applicationId: com.wrteam.saas.school → com.new.package.name
+      applicationId: com.wrteam.saas.school → com.yourcompany.eschool
+      namespace: com.wrteam.saas.school → com.yourcompany.eschool
+   📝 android/app/src/main/AndroidManifest.xml
+      package: com.wrteam.saas.school → com.yourcompany.eschool
+   📝 android/app/src/main/kotlin/com/wrteam/saas/school/MainActivity.kt
+      package: com.wrteam.saas.school → com.yourcompany.eschool
+      moved to: android/app/src/main/kotlin/com/wrteam/saas/school → android/app/src/main/kotlin/com/yourcompany/eschool
 
 🍎 iOS · School Builder layout
    📝 ios/Flutter/Debug.xcconfig
-      SCHOOL_BUNDLE_ID: com.wrteam.eschool.saas → com.new.package.name
+      SCHOOL_BUNDLE_ID: com.wrteam.eschool.saas → com.yourcompany.eschool
    📝 ios/Flutter/Release.xcconfig
-      SCHOOL_BUNDLE_ID: com.wrteam.eschool.saas → com.new.package.name
+      SCHOOL_BUNDLE_ID: com.wrteam.eschool.saas → com.yourcompany.eschool
 
 ✅ Package name updated.
 ```
@@ -81,15 +87,22 @@ The command looks at the project and picks the layout by itself.
 
 | Platform | File | What changes |
 |----------|------|--------------|
-| Android | `android/app/build.gradle` | The second value of `getProperty('applicationId', '...')` |
+| Android | `android/app/build.gradle` | The application id: the second value of `getProperty('applicationId', '...')` |
+| Android | `android/app/build.gradle` | `namespace` |
+| Android | `AndroidManifest.xml` (main, debug, profile) | The `package` of the `<manifest>` tag, where it has one |
+| Android | Kotlin and Java sources under `android/app/src/main/` | Their `package`, the imports of it, and the folder they are in |
 | iOS | `ios/Flutter/Debug.xcconfig` and `ios/Flutter/Release.xcconfig` | The `SCHOOL_BUNDLE_ID` line |
 
-Nothing else is touched. In particular:
+So after a rename no file of the project still shows the old name, apart from the Firebase files, which Firebase regenerates.
 
-- `namespace`, the `package` of `AndroidManifest.xml` and the Kotlin folder stay as they are. They name the code, not the app: the stores and Firebase only read the application id.
 - `ios/Runner.xcodeproj/project.pbxproj` keeps reading `$(SCHOOL_BUNDLE_ID)`, so the Multi-School add-on can still give each school its own bundle id.
+- The application id and the bundle id are the same values the School Builder writes with **Save to project**, so the command and the builder always agree. A school build overrides them and never reads the code's package, so it works the same before and after.
 
-These are the same values the School Builder writes with **Save to project**, so the command and the builder always agree.
+#### Names with reserved words
+
+A name such as `com.new.package.name` is a valid application id, but the Android build refuses it as a `namespace`, because `new` and `package` are reserved words in Java. For such a name the command renames the application id, which is the name the stores and Firebase use, and leaves the code's package as it is. It says so in its output, and the project keeps building.
+
+Words that only Kotlin reserves, such as `in` in `in.co.school.app`, are fine: the command writes them in backticks in Kotlin sources.
 
 If version 1.5.0 of this command was run on the project, it wrote the bundle id into `project.pbxproj` and cut the link to `SCHOOL_BUNDLE_ID`. This version detects that and puts the link back.
 

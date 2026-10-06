@@ -209,6 +209,9 @@ class _Output {
   final void Function(String line) line;
   final OutputStyle style;
 
+  /// The file the last change was in, so its other changes list under it.
+  String? _file;
+
   _Output(this.line, this.style);
 
   void title(String text, String platforms) {
@@ -217,13 +220,17 @@ class _Output {
   }
 
   void platform(RenamePlan plan) {
+    _file = null;
     final icon = plan.platform == 'Android' ? '🤖' : '🍎';
     line('${style.icon(icon)}${style.bold(plan.platform)} '
         '${style.dim('${style.separator} ${plan.layout}')}');
   }
 
   void change(RenameChange change) {
-    line('${style.indent}${style.icon('📝')}${change.path}');
+    if (change.path != _file) {
+      line('${style.indent}${style.icon('📝')}${change.path}');
+      _file = change.path;
+    }
     line('${style.indent}${style.indent}${change.label}: '
         '${style.dim(change.oldValue)} ${style.arrow} '
         '${style.green(change.newValue)}');

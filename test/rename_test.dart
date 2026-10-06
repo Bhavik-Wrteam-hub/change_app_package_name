@@ -62,26 +62,71 @@ void main() {
       }
     });
 
-    test('changes nothing but the two ids', () async {
+    test('renames the code with the app, so no old name is left on Android',
+        () async {
+      const oldActivity =
+          'android/app/src/main/kotlin/com/wrteam/saas/school/MainActivity.kt';
+      const newActivity =
+          'android/app/src/main/kotlin/com/yourcompany/eschool/MainActivity.kt';
       final before = project.snapshot();
       await run(project, [newId]);
       final after = project.snapshot();
 
-      expect(after.keys, before.keys, reason: 'no file is added or moved');
-      final changed =
-          before.keys.where((path) => before[path] != after[path]).toSet();
+      expect(
+        after['android/app/build.gradle'],
+        before['android/app/build.gradle']!
+            .replaceFirst("getProperty('applicationId', '$studentAndroidId')",
+                "getProperty('applicationId', '$newId')")
+            .replaceFirst(
+                "namespace '$studentAndroidId'", "namespace '$newId'"),
+        reason: 'the application id and the namespace, and no other line',
+      );
+      for (final manifest in [
+        'android/app/src/main/AndroidManifest.xml',
+        'android/app/src/debug/AndroidManifest.xml',
+      ]) {
+        expect(
+            after[manifest],
+            before[manifest]!.replaceFirst(
+                'package="$studentAndroidId"', 'package="$newId"'));
+      }
+      expect(after.containsKey(oldActivity), isFalse);
+      expect(after[newActivity],
+          before[oldActivity]!.replaceFirst(studentAndroidId, newId));
+      expect(
+          Directory(
+                  '${project.root.path}/android/app/src/main/kotlin/com/wrteam')
+              .existsSync(),
+          isFalse,
+          reason: 'the emptied folders of the old package are removed');
+
+      expect(
+          after.keys
+              .where((path) => path.startsWith('android/'))
+              .where((path) => path != 'android/app/google-services.json')
+              .where((path) => after[path]!.contains(studentAndroidId)),
+          isEmpty,
+          reason: 'only the Firebase file, which Firebase regenerates');
+    });
+
+    test('touches no file but the ones a rename is made of', () async {
+      final before = project.snapshot();
+      await run(project, [newId]);
+      final after = project.snapshot();
+
+      final changed = {
+        ...before.keys.where((path) => before[path] != after[path]),
+        ...after.keys.where((path) => !before.containsKey(path)),
+      };
       expect(changed, {
         'android/app/build.gradle',
+        'android/app/src/main/AndroidManifest.xml',
+        'android/app/src/debug/AndroidManifest.xml',
+        'android/app/src/main/kotlin/com/wrteam/saas/school/MainActivity.kt',
+        'android/app/src/main/kotlin/com/yourcompany/eschool/MainActivity.kt',
         'ios/Flutter/Debug.xcconfig',
         'ios/Flutter/Release.xcconfig',
       });
-      expect(
-        after['android/app/build.gradle'],
-        before['android/app/build.gradle']!.replaceFirst(
-            "getProperty('applicationId', '$studentAndroidId')",
-            "getProperty('applicationId', '$newId')"),
-        reason: 'namespace and every other line stay as they were',
-      );
       expect(
         after['ios/Flutter/Release.xcconfig'],
         before['ios/Flutter/Release.xcconfig']!
@@ -113,8 +158,10 @@ void main() {
       final after = project.snapshot();
 
       expect(result.exitCode, 0);
-      expect(before.keys.where((path) => before[path] != after[path]),
-          ['android/app/build.gradle']);
+      expect(after['android/app/build.gradle'], contains("namespace '$newId'"));
+      for (final path in before.keys.where((path) => path.startsWith('ios/'))) {
+        expect(after[path], before[path], reason: '$path changed');
+      }
     });
 
     test('--ios leaves Android alone', () async {
@@ -237,11 +284,26 @@ void main() {
       final after = project.snapshot();
 
       expect(result.exitCode, 0, reason: result.output);
-      expect(before.keys.where((path) => before[path] != after[path]).toSet(), {
+      expect({
+        ...before.keys.where((path) => before[path] != after[path]),
+        ...after.keys.where((path) => !before.containsKey(path)),
+      }, {
         'android/app/build.gradle',
+        'android/app/src/main/kotlin/com/wrteam/saas/staff/MainActivity.kt',
+        'android/app/src/main/kotlin/com/yourcompany/eschool/MainActivity.kt',
         'ios/Flutter/Debug.xcconfig',
         'ios/Flutter/Release.xcconfig',
       });
+      expect(after['android/app/build.gradle'], contains('namespace "$newId"'),
+          reason: 'the quote the file uses is kept');
+      expect(
+          after[
+              'android/app/src/main/kotlin/com/yourcompany/eschool/MainActivity.kt'],
+          startsWith('package $newId\n'));
+      expect(after['android/app/src/main/AndroidManifest.xml'],
+          before['android/app/src/main/AndroidManifest.xml'],
+          reason: 'a manifest with no package attribute is left as it is, '
+              'its comment that reads package="..." included');
       expect(
           addonApplicationId
               .firstMatch(after['android/app/build.gradle']!)!
@@ -339,6 +401,142 @@ void main() {
       expect(result.exitCode, 0, reason: result.output);
       expect(
           project.read('ios/Runner.xcodeproj/project.pbxproj'), withExtension);
+    });
+  });
+
+  group('the code package', () {
+    const kotlin = 'android/app/src/main/kotlin';
+    const oldActivity = '$kotlin/com/wrteam/saas/school/MainActivity.kt';
+
+    setUp(() => project = Project.student());
+
+    test('a name with words Java reserves renames the app and keeps the code',
+        () async {
+      const reserved = 'com.new.package.name';
+      final before = project.snapshot();
+      final result = await run(project, [reserved]);
+      final after = project.snapshot();
+
+      expect(result.exitCode, 0, reason: result.output);
+      expect(
+        after['android/app/build.gradle'],
+        before['android/app/build.gradle']!.replaceFirst(
+            "getProperty('applicationId', '$studentAndroidId')",
+            "getProperty('applicationId', '$reserved')"),
+        reason: 'Android refuses this name as a namespace, so it stays',
+      );
+      expect(after['android/app/src/main/AndroidManifest.xml'],
+          before['android/app/src/main/AndroidManifest.xml']);
+      expect(after[oldActivity], before[oldActivity]);
+      expect(
+          result.output,
+          contains('The code keeps $studentAndroidId (namespace, manifest '
+              'package and source folder), because "new" and "package" are '
+              'reserved words in Java'));
+    });
+
+    test('one reserved word is named on its own', () async {
+      final result = await run(project, ['com.school.default', '--android']);
+
+      expect(result.exitCode, 0);
+      expect(
+          result.output, contains('because "default" is a reserved word in'));
+    });
+
+    test('says nothing once the app has the name and the code never will',
+        () async {
+      await run(project, ['com.new.package.name']);
+      final result = await run(project, ['com.new.package.name']);
+
+      expect(result.output, contains('already uses com.new.package.name'));
+    });
+
+    test('words only Kotlin reserves are written in backticks', () async {
+      const name = 'in.co.myschool.app';
+      final result = await run(project, [name, '--android']);
+
+      expect(result.exitCode, 0, reason: result.output);
+      expect(project.read('android/app/build.gradle'),
+          contains("namespace '$name'"));
+      expect(project.read('$kotlin/in/co/myschool/app/MainActivity.kt'),
+          startsWith('package `in`.co.myschool.app\n'));
+    });
+
+    test('an app renamed earlier without its code gets the code on a rerun',
+        () async {
+      project.write('android/app/build.gradle',
+          schoolBuilderGradle(newId, namespace: studentAndroidId));
+      final result = await run(project, [newId, '--android']);
+
+      expect(result.exitCode, 0, reason: result.output);
+      expect(result.output, contains('namespace: $studentAndroidId -> $newId'));
+      expect(project.read('android/app/build.gradle'),
+          contains("namespace '$newId'"));
+      expect(project.exists(oldActivity), isFalse);
+      expect(project.exists('$kotlin/com/yourcompany/eschool/MainActivity.kt'),
+          isTrue);
+    });
+
+    test('sources below the package, and imports of it, follow', () async {
+      project.write('$kotlin/com/wrteam/saas/school/util/Helper.kt',
+          'package $studentAndroidId.util\n\nimport $studentAndroidId.MainActivity\n');
+      project.write('android/app/src/main/java/io/other/Plugin.java',
+          'package io.other;\n\nimport $studentAndroidId.R;\nimport static $studentAndroidId.Keys.NAME;\n');
+      final result = await run(project, [newId, '--android']);
+
+      expect(result.exitCode, 0, reason: result.output);
+      expect(project.read('$kotlin/com/yourcompany/eschool/util/Helper.kt'),
+          'package $newId.util\n\nimport $newId.MainActivity\n');
+      expect(project.exists('$kotlin/com/wrteam'), isFalse);
+      expect(project.read('android/app/src/main/java/io/other/Plugin.java'),
+          'package io.other;\n\nimport $newId.R;\nimport static $newId.Keys.NAME;\n',
+          reason: 'a source of another package stays where it is');
+    });
+
+    test('a project with no namespace takes the package from its manifest',
+        () async {
+      project.write(
+          'android/app/build.gradle',
+          project
+              .read('android/app/build.gradle')
+              .replaceFirst("    namespace '$studentAndroidId'\n", ''));
+      final result = await run(project, [newId, '--android']);
+
+      expect(result.exitCode, 0, reason: result.output);
+      expect(project.read('android/app/src/main/AndroidManifest.xml'),
+          contains('package="$newId">'));
+      expect(project.exists('$kotlin/com/yourcompany/eschool/MainActivity.kt'),
+          isTrue);
+    });
+
+    test('a file already at the new place stops the rename, untouched',
+        () async {
+      project.write('$kotlin/com/yourcompany/eschool/MainActivity.kt',
+          mainActivity(newId));
+      final before = project.snapshot();
+      final result = await run(project, [newId]);
+
+      expect(result.exitCode, 1);
+      expect(result.output, contains('already exists'));
+      expect(project.snapshot(), before);
+    });
+
+    test('a dry run lists the whole rename and writes none of it', () async {
+      final before = project.snapshot();
+      final result = await run(project, [newId, '--dry-run', '--android']);
+
+      expect(
+          result.lines,
+          containsAll(<String>[
+            '  android/app/build.gradle',
+            '    applicationId: $studentAndroidId -> $newId',
+            '    namespace: $studentAndroidId -> $newId',
+            '  android/app/src/main/AndroidManifest.xml',
+            '    package: $studentAndroidId -> $newId',
+            '  $oldActivity',
+            '    moved to: $kotlin/com/wrteam/saas/school -> $kotlin/com/yourcompany/eschool',
+          ]));
+      expect(project.snapshot(), before);
     });
   });
 

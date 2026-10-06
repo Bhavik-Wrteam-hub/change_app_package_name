@@ -1,3 +1,10 @@
+## [1.7.0] - (October 06, 2026)
+
+* School Builder layout: rename the code with the app. `namespace`, the `package` of each manifest, and the package and folder of the Kotlin and Java sources now follow the application id, so no file of the project still shows the old name. An app renamed with 1.6.x gets its code renamed on the next run with the same name.
+* A name with a word Java reserves, such as `com.new.package.name`, renames the application id only and says why: the Android build refuses such a name as a `namespace`.
+* Words only Kotlin reserves, such as `in`, are written in backticks in Kotlin sources.
+* The summary lists every change of a file under that file.
+
 ## [1.6.1] - (October 06, 2026)
 
 * Clearer output: a title, one block per platform with the files it changes, a marked result, and the Firebase step with its command on a line of its own.

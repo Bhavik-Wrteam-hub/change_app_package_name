@@ -7,7 +7,14 @@ const String studentAndroidId = 'com.wrteam.saas.school';
 const String studentIosId = 'com.wrteam.eschool.saas';
 const String staffId = 'com.wrteam.saas.staff';
 
-String schoolBuilderGradle(String applicationId) => '''
+/// [namespace] is the code package, when the app was renamed without it, and
+/// [quote] is the quote around it: the two apps differ in that.
+String schoolBuilderGradle(
+  String applicationId, {
+  String? namespace,
+  String quote = "'",
+}) =>
+    '''
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -26,8 +33,22 @@ android {
         applicationId schoolApplicationId
         manifestPlaceholders += [appName: schoolAppName]
     }
-    namespace '$applicationId'
+    namespace $quote${namespace ?? applicationId}$quote
 }
+''';
+
+/// The Staff app's main manifest: no `package` attribute on the tag, and a
+/// comment that an old version of the command left reading `package="..."`.
+String manifestWithoutPackage(String leftover) => '''
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="\${appName}">
+        <activity android:name=".MainActivity" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package="$leftover">
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+    -->
+</manifest>
 ''';
 
 String standardGradle(String applicationId) => '''
@@ -180,7 +201,10 @@ class Project {
   /// with a bundle id of their own.
   factory Project.staff() {
     final project = Project.empty();
-    project._android(schoolBuilderGradle(staffId), staffId);
+    project._android(schoolBuilderGradle(staffId, quote: '"'), staffId);
+    project.write('android/app/src/main/AndroidManifest.xml',
+        manifestWithoutPackage(staffId));
+    project.file('android/app/src/debug/AndroidManifest.xml').deleteSync();
     project.write('ios/Flutter/Debug.xcconfig', xcconfig('debug', staffId));
     project.write('ios/Flutter/Release.xcconfig', xcconfig('release', staffId));
     project.write(
